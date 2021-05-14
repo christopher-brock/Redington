@@ -6,7 +6,7 @@ Function Find-RedEvents {
 .SYNOPSIS
     Event ID Searcher
 .DESCRIPTION
-    Find all occurences of the specified event ID for the selected computer and export to a csv file
+    Find all occurences of the specified event ID in the last 24 hours for the selected computer and export to a csv file
 .EXAMPLE
     PS C:\> Find-RedEvent
     Will search for the default example event 4648 which shows logged on users for the local computer
@@ -42,6 +42,7 @@ Function Find-RedEvents {
 
     $Date = (Get-Date).ToString("dd-MM-yyyy")
     $Filename = "Event-" + $EventID + "-Report-" + $Date + ".csv"
+    $Yesterday = (Get-Date) - (New-TimeSpan -Day 1)
 
 Write-Host "Checking for elevated permissions..." -ForegroundColor Yellow
 
@@ -71,9 +72,9 @@ if(Test-Path $FileLocation){
 
 Write-Host "Searching for: $EventID on $ComputerName in the $Logname log" -ForegroundColor Yellow
 
-$Events = Get-WinEvent -FilterHashtable @{Logname=$Logname; ID=$EventID } -ComputerName $ComputerName
+$Events = Get-WinEvent -FilterHashtable @{Logname=$Logname; ID=$EventID; StartTime=$Yesterday} -ComputerName $ComputerName
 
-$Events | select Message,Id,Logname | Export-Csv $FileLocation$Filename -NoTypeInformation
+$Events | select Message,TimeCreated,Id,Logname | Export-Csv $FileLocation$Filename -NoTypeInformation
 
 }
 
